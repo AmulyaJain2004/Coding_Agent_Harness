@@ -1,9 +1,12 @@
 import json
 
-from llm import SYSTEM_PROMPT, call_llm
+import tui
+from llm import SYSTEM_PROMPT, MODEL, call_llm
+from skills import SKILLS
 from tools import TOOLS
 
-user_input = input("Enter your prompt >")
+tui.print_banner(MODEL, SKILLS)
+user_input = tui.prompt_input()
 
 messages = [
     {"role":"system","content": SYSTEM_PROMPT},
@@ -11,22 +14,23 @@ messages = [
 ]
 
 while True:
-    message, usage = call_llm(messages)
+    with tui.thinking():
+        message, usage = call_llm(messages)
     messages.append(message.model_dump(exclude_none=True))
 
     if message.content:
-        print("\nAgent: ",message.content, "\n")
+        tui.render_agent_message(message.content)
 
-    print(usage)
+    tui.print_usage(usage)
 
     if not message.tool_calls:
         break
 
     for tool_call in message.tool_calls:
         args = json.loads(tool_call.function.arguments)
+        tui.render_tool_call(tool_call.function.name, args)
         result = TOOLS[tool_call.function.name](**args)
-        print("Tool: ", tool_call.function.name, args)
-        print(result, "\n")
+        tui.render_tool_result(result)
 
         messages.append({
             "role": "tool",
