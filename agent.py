@@ -1,9 +1,9 @@
 import json
-
 import tui
 from llm import SYSTEM_PROMPT, MODEL, call_llm
 from skills import SKILLS
 from tools import TOOLS
+from context import reminder
 
 tui.print_banner(MODEL, SKILLS)
 user_input = tui.prompt_input()
@@ -15,7 +15,8 @@ messages = [
 
 while True:
     with tui.thinking():
-        message, usage = call_llm(messages)
+        message, usage = call_llm(messages + [reminder()])
+        
     messages.append(message.model_dump(exclude_none=True))
 
     if message.content:
