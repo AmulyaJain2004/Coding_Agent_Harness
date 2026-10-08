@@ -17,6 +17,8 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.text import Text
 
+from todos import active_form
+
 # Windows consoles default stdout/stderr to the system codepage (e.g. cp1252),
 # which can't encode the unicode glyphs rich writes out (box borders, etc).
 for stream in (sys.stdout, sys.stderr):
@@ -63,8 +65,12 @@ def prompt_input():
 
 
 def thinking():
-    """Context manager that shows a spinner while the LLM is responding."""
-    return console.status("[bold green]thinking...[/]", spinner="dots")
+    """Context manager that shows a spinner while the LLM is responding.
+
+    Shows the current in_progress todo, if any, instead of a generic label.
+    """
+    text = active_form() or "thinking..."
+    return console.status(f"[bold green]{text}[/]", spinner="dots")
 
 
 def render_agent_message(content):

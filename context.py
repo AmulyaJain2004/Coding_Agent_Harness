@@ -4,6 +4,7 @@ Late injection
 import os
 import subprocess
 from datetime import datetime
+from todos import todos_note
 
 SEEN = {} # path -> mtime when the agent last read it
 
@@ -19,19 +20,24 @@ def git_branch():
     )
     return result.stdout.strip() or "(detached)"
 
-# we can add git_status
+def git_status():
+    result = subprocess.run(
+        "git status --short", shell = True, capture_output = True, text = True
+    )
+    return result.stdout.strip() or "(clean)"
 
 # we will add/inject the reminder and other messages at the end of prompt to utilise prefix cache otherwise it will keep changing as datetime changes due to code
 def reminder():
     """The block we append to the messages on every turn."""
     return {
         "role": "user",
-        "content": {
+        "content": (
             "<env>\n"
             f"time: {datetime.now(): %Y-%m-%d %H:%M}\n"
             f"git branch: {git_branch()}\n"
-            "</env>"
-        }
+            f"git status:\n{git_status()}\n"
+            "</env>" + todos_note() + stale_note()
+        )
     }
 
 def stale_note():
